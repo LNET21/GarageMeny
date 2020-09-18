@@ -34,7 +34,7 @@ namespace Exercise5
             {
                 log.Dequeue();
             }
-            log.Enqueue(message);
+            log.Enqueue($"{DateTime.Now.ToString("HH:mm:ss")} {message}");
         }
 
         /// <summary>

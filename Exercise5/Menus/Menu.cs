@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Exercise5
 {
     public class Menu
     {
-        public string MenuName { get; set; }
-        private ConsoleUI UI { get; set; }
+        private static ConsoleUI UI { get; set; }
+        private static EventLog Log { get; set; }
+        private static bool Initialized { get; set; } = false;
+        public string MenuName { get; }
         public List<MenuOption> Options { get; }
 
         private int currentIndex; // zero-based
 
-        public Menu(string name, ConsoleUI ui)
+        private Menu(string name)
         {
             MenuName = name;
-            UI = ui;
             Options = new List<MenuOption>();
+            currentIndex = 0;
         }
 
         public void Add(MenuOption option)
@@ -31,12 +34,12 @@ namespace Exercise5
         /// <returns>Returns user's choice</returns>
         public MenuOption Run()
         {
-            currentIndex = 0;
             MenuOption option = null;
             while(option == null)
             {
                 UI.DisplayMenu(this, currentIndex);
-                var key = UI.GetKey();
+                UI.DisplayLog(Log);
+                var key = UI.GetKeyFromUser();
                 switch(key)
                 {
                     case ConsoleKey.UpArrow:
@@ -59,6 +62,42 @@ namespace Exercise5
                 }
             }
             return option;
+        }
+
+        internal static void Init(ConsoleUI ui, EventLog log)
+        {
+            UI = ui;
+            Log = log;
+            Initialized = true;
+        }
+
+        public void ResetCursorIndex()
+        {
+            currentIndex = 0;
+        }
+
+        /// <summary>
+        /// Instantiates a new Menu object.
+        /// The static Menu.Init method must 
+        /// be called once, before any Menu 
+        /// objects can be initialized.
+        /// 
+        /// This is to make sure that the Menu 
+        /// class has references to the UI and the Log.
+        /// </summary>
+        /// <param name="name">The menu header text</param>
+        /// <returns>A new instance of Menu</returns>
+        public static Menu Create(string name)
+        {
+            if(Initialized)
+            {
+                var menu = new Menu(name);
+                return menu;
+            }
+            else
+            {
+                throw new Exception("The Menu class must be initialized before any instances can be created!");
+            }
         }
     }
 }

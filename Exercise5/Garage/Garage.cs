@@ -1,35 +1,53 @@
-﻿using System;
+﻿using Exercise5.Garage;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace Exercise5
 {
-    class Garage<T> where T : Vehicle
+    public class Garage<T> : IEnumerable<T> where T : Vehicle
     {
         private Vehicle[] vehicles;
 
         private int count;
+        public int Count
+        {
+            get { return count; }
+        }
+
+        public int Capacity
+        {
+            get { return vehicles.Length; }
+        }
 
         /// <summary>
         /// Parks a vehicle in the garage
         /// </summary>
         /// <param name="vehicle">The vehicle to park</param>
         /// <returns>Returns true if the vehicle was parked, or false if the garage was already full</returns>
-        public bool ParkVehicle(Vehicle vehicle)
+        public ParkingResult ParkVehicle(Vehicle vehicle)
         {
-            bool result = false; // no success yet
-
-            if(count < vehicles.Length) // if not full
+            ParkingResult result;
+            if (count < vehicles.Length) // if not full
             {
                 if (IndexOf(vehicle.RegNo) == -1) // if not duplicate
                 {
                     vehicles[count] = vehicle; // add it
                     count++;
-                    result = true; // success
+                    result = new ParkingResult(true, null);
                 }
+                else
+                {
+                    result = new ParkingResult(false, $"{vehicle.RegNo} is already parked");
+                }
+            }
+            else
+            { 
+                result = new ParkingResult(false, "Garage is full");
             }
             return result;
         }
@@ -98,6 +116,11 @@ namespace Exercise5
             return (index != -1) ? vehicles[index] : null;
         }
 
+        public bool IsFull()
+        {
+            return (vehicles.Length == count);
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -107,10 +130,14 @@ namespace Exercise5
             vehicles = new Vehicle[capacity];
             count = 0;
         }
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return vehicles[i] as T;
+            }
+        }
 
-        //public IEnumerator<T> GetEnumerator()
-        //{
-        //    return vehicles.GetEnumerator<T>();
-        //}
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

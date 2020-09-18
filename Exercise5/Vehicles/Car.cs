@@ -6,12 +6,17 @@ namespace Exercise5
 {
     public class Car : Vehicle
     {
-        public Enum.CarMake Make { get; }
+        public string Make { get; }
 
-        public Car(string regNo, string color, int nrOfWheels, Enum.FuelType fuelType, Enum.CarMake make) 
+        public Car(string regNo, string color, int nrOfWheels, string fuelType, string make) 
             : base(regNo, color, nrOfWheels, fuelType)
         {
             Make = make;
+        }
+
+        public override string GetDescription()
+        {
+            return $"Brand is {Make}";
         }
     }
 }
