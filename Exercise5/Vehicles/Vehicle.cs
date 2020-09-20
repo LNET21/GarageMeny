@@ -10,22 +10,21 @@ namespace Exercise5
         public string Color { get; set; }
         public int NrOfWheels { get; set; }
         public string FuelType { get; set; }
+
         public Vehicle()
         {
 
         }
+
         public Vehicle(string regNo, string color, int nrOfWheels, string fuelType)
         {
-            RegNo = regNo.ToUpper(); // Registration number always in uppercase
+            RegNo = regNo.ToUpper(); // Reg-nummer alltid med versaler
             Color = color;
             NrOfWheels = nrOfWheels;
             FuelType = fuelType;
         }
 
-        /// <summary>
-        /// Gets a description of the property specific for the vehicle type
-        /// </summary>
-        /// <returns></returns>
-        public abstract string GetDescription();
+        public abstract string GetDescription(); // Returnerar fordonsspecifik beskrivning
+
     }
 }

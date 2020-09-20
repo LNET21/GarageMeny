@@ -4,25 +4,8 @@ using System.Text;
 
 namespace Exercise5
 {
-    public class ConsoleUI
+    public class ConsoleUI : IUI
     {
-        ConsoleColor normalFG = ConsoleColor.Gray;
-        ConsoleColor normalBG = ConsoleColor.Black;
-        ConsoleColor menuBG = ConsoleColor.Black;
-        ConsoleColor menuBGcursor = ConsoleColor.Blue;
-        ConsoleColor menuFG = ConsoleColor.Green;
-        ConsoleColor menuFGcursor = ConsoleColor.White;
-        ConsoleColor listFG = ConsoleColor.Yellow;
-        ConsoleColor listHeaderFG = ConsoleColor.Green;
-        ConsoleColor listHeaderBG = ConsoleColor.DarkGreen;
-        ConsoleColor inputHeaderFG = ConsoleColor.Yellow;
-        ConsoleColor inputHeaderBG = ConsoleColor.DarkRed;
-        ConsoleColor warningFG = ConsoleColor.Red;
-        ConsoleColor successFG = ConsoleColor.Green;
-        ConsoleColor logFG = ConsoleColor.Cyan;
-        ConsoleColor logHeaderBG = ConsoleColor.DarkCyan;
-        string menuDivider = "****************************************";
-        string menuFeed    = "*                                      *";
 
         public ConsoleUI()
         {
@@ -41,8 +24,8 @@ namespace Exercise5
 
         public void SetColorNormal()
         {
-            Console.ForegroundColor = normalFG;
-            Console.BackgroundColor = normalBG;
+            Console.ForegroundColor = Const.normalFG;
+            Console.BackgroundColor = Const.normalBG;
         }
 
         public void Write(string text)
@@ -50,21 +33,26 @@ namespace Exercise5
             Console.Write(text);
         }
 
+        public void WriteLine(string text)
+        {
+            Console.WriteLine(text);
+        }
+
         public void Write(string text, ConsoleColor foreground)
         {
             Console.ForegroundColor = foreground;
-            Console.Write(text);
-            Console.ForegroundColor = normalFG;
+            Write(text);
+            Console.ForegroundColor = Const.normalFG;
         }
 
         public void WriteWarning(string text)
         {
-            Write(text, warningFG);
+            Write(text, Const.warningFG);
         }
 
         public void WriteSuccess(string text)
         {
-            Write(text, successFG);
+            Write(text, Const.successFG);
         }
 
         public void DisplayLog(EventLog log)
@@ -72,12 +60,12 @@ namespace Exercise5
             var logs = log.GetLogEntries();
             if(logs.Length > 0)
             {
-                SetColor(logFG, logHeaderBG);
-                Console.WriteLine("Time     Description".PadRight(40));
-                SetColor(logFG, normalBG);
+                SetColor(Const.logFG, Const.logHeaderBG);
+                WriteLine("Time     Description".PadRight(40));
+                SetColor(Const.logFG, Const.normalBG);
                 for (int i = logs.Length - 1; i >= 0; i--)
                 {
-                    Console.WriteLine(logs[i]);
+                    WriteLine(logs[i]);
                 }
             }
             SetColorNormal();
@@ -85,34 +73,34 @@ namespace Exercise5
 
         public void DisplayMenu(Menu menu, int cursor)
         {
-            SetColor(menuFG, menuBG);
+            SetColor(Const.menuFG, Const.menuBG);
             Console.SetCursorPosition(0,0);
             Console.CursorVisible = false;
-            Console.WriteLine(menuDivider);
-            Console.WriteLine(GetMenuHeader(menu.MenuName));
-            Console.WriteLine(menuDivider);
-            Console.WriteLine(menuFeed);
+            WriteLine(Const.menuDivider);
+            WriteLine(GetMenuHeader(menu.MenuName));
+            WriteLine(Const.menuDivider);
+            WriteLine(Const.menuFeed);
             for (int i=0; i < menu.Options.Count;i++)
             {
-                SetColor(menuFG, menuBG);
-                Console.Write("*  ");
+                SetColor(Const.menuFG, Const.menuBG);
+                Write("*  ");
                 if (i == cursor)
-                    SetColor(menuFGcursor, menuBGcursor);
+                    SetColor(Const.menuFGcursor, Const.menuBGcursor);
                 else
-                    SetColor(menuFG, menuBG);
+                    SetColor(Const.menuFG, Const.menuBG);
                 var name = $" {menu.Options[i].OptionName.PadRight(32, ' ')} ";
-                Console.Write(name);
-                SetColor(menuFG, menuBG);
-                Console.WriteLine("  *");
+                Write(name);
+                SetColor(Const.menuFG, Const.menuBG);
+                WriteLine("  *");
             }
-            var feeds = 6 - menu.Options.Count;
+            var feeds = 7 - menu.Options.Count;
             while(feeds>0)
             {
-                Console.WriteLine(menuFeed);
+                WriteLine(Const.menuFeed);
                 feeds--;
             }
-            Console.WriteLine(menuFeed);
-            Console.WriteLine(menuDivider);
+            WriteLine(Const.menuFeed);
+            WriteLine(Const.menuDivider);
             SetColorNormal();
         }
 
@@ -123,31 +111,49 @@ namespace Exercise5
             return $"*{header.PadRight(38)}*";
         }
 
-        public string GetTextFromUser(string message)
+        public string GetTextFromUser(string message, bool acceptEmpty = true)
         {
             Console.CursorVisible = true;
-            Console.Write(message);
-            var input = Console.ReadLine();
+            bool success = false;
+            string input = "";
+            while (success == false)
+            {
+                Write(message);
+                input = Console.ReadLine();
+                if (input != "" || acceptEmpty)
+                {
+                    success = true;
+                }
+            }
             Console.CursorVisible = false;
             return input;
         }
 
-        public int GetIntegerFromUser(string message)
+        public int GetIntegerFromUser(string message, bool acceptEmpty = false)
         {
             bool success = false;
             int result = 0;
             while(success == false)
             {
-                var input = GetTextFromUser(message);
-                success = int.TryParse(input, out result);
-                WriteWarning(success ? "" : "Skriv ett heltal!\n");
+                var input = GetTextFromUser(message, Const.AcceptEmptyString);
+                if(acceptEmpty && input == "")
+                {
+                    success = true;
+                    result = -1;
+                }
+                else
+                {
+                    success = int.TryParse(input, out result);
+                    WriteWarning(success ? "" : "Skriv ett heltal!\n");
+                }
             }
             return result;
         }
 
-        public void PromptForKey(string prefix = "")
+
+        public void PromptUserForKey(string prefix = "")
         {
-            Console.WriteLine("\nPress a key to return to menu!");
+            WriteLine("\nPress a key to return to menu!");
             Console.ReadKey();
         }
 
@@ -156,35 +162,42 @@ namespace Exercise5
             return Console.ReadKey(true).Key; // intercept read
         }
 
+        public void WaitAndClear()
+        {
+            PromptUserForKey(Const.newlines);
+            Clear();
+        }
+
+
         public void DisplayInputHeader(string header)
         {
-            SetColor(inputHeaderFG, inputHeaderBG);
+            SetColor(Const.inputHeaderFG, Const.inputHeaderBG);
             int pads = (40 - header.Length) / 2;
             string text = header.PadLeft(pads + header.Length, ' ');
             text = text.PadRight(40, ' ');
-            Console.WriteLine(text);
+            WriteLine(text);
             SetColorNormal();
         }
 
         public void DisplayGarage(Garage<Vehicle> garage)
         {
+            var nr = garage.Count;
             var free = garage.Capacity - garage.Count;
-            Console.ForegroundColor = normalFG;
-            Console.Clear();
+            SetColorNormal();
+            Clear();
             DisplayVehicleList(garage);
-            Console.WriteLine($"\nThis makes a total of {garage.Count} parked vehicles in the garage.");
-            Console.WriteLine($"{(free==0 ? "No more" : $"Another {garage.Capacity - garage.Count}")} vehicles can be parked.\n");
-            PromptForKey();
-            Console.Clear();
+            Write($"\nThere {(nr != 1 ? "are" : "is")} {nr} parked vehicle{(nr != 1 ? "s" : "")} in the garage. ");
+            Write($"{(free==0 ? "No more" : $"Another {free}")} vehicle{(free>1 ? "s" : "")} can be parked.\n");
+            PromptUserForKey();
+            Clear();
         }
 
         public void DisplayVehicleList(Garage<Vehicle> vehicleList)
         {
-            SetColor(listHeaderFG, listHeaderBG);
-            Console.WriteLine(" Regnr       Type        Color       Wheels    Fueltype    Extra info        ");
-            SetColorNormal();
+            SetColor(Const.listHeaderFG, Const.listHeaderBG);
+            WriteLine(" Regnr       Type        Color       Wheels    Fueltype    Extra info        ");
             var sb = new StringBuilder();
-            Console.ForegroundColor = listFG;
+            SetColor(Const.listFG, Const.normalBG);
             foreach (var v in vehicleList)
             {
                 sb.Append(" ");
@@ -194,10 +207,10 @@ namespace Exercise5
                 sb.Append(v.NrOfWheels.ToString().PadRight(10, ' '));
                 sb.Append(v.FuelType.PadRight(12, ' '));
                 sb.Append(v.GetDescription().PadRight(12, ' '));
-                Console.WriteLine(sb);
+                WriteLine(sb.ToString());
                 sb.Clear();
             }
-            Console.ForegroundColor = normalFG;
+            SetColorNormal();
         }
 
         public void DisplayVehicleList(Garage<Vehicle> vehicleList, string typeName)
@@ -210,7 +223,6 @@ namespace Exercise5
                     list.ParkVehicle(v);
                 }
             }
-
             Clear();
             DisplayVehicleList(list);
             if (list.Count > 0)
@@ -221,8 +233,8 @@ namespace Exercise5
             {
                 WriteWarning($"\nThere are no vehicles of the type {typeName} in the garage.");
             }
-            PromptForKey();
-            Console.Clear();
+            PromptUserForKey();
+            Clear();
         }
     }
 }

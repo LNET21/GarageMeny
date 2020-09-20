@@ -25,10 +25,20 @@ namespace Exercise5
         }
 
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="capacity">Number of parking stalls in the garage</param>
+        public Garage(int capacity) // number of parking stalls
+        {
+            vehicles = new Vehicle[capacity];
+            count = 0;
+        }
+
+        /// <summary>
         /// Parks a vehicle in the garage
         /// </summary>
         /// <param name="vehicle">The vehicle to park</param>
-        /// <returns>Returns true if the vehicle was parked, or false if the garage was already full</returns>
+        /// <returns>Returns a PerkingResult object with info about how things worked out</returns>
         public ParkingResult ParkVehicle(Vehicle vehicle)
         {
             ParkingResult result;
@@ -42,7 +52,7 @@ namespace Exercise5
                 }
                 else
                 {
-                    result = new ParkingResult(false, $"{vehicle.RegNo} is already parked");
+                    result = new ParkingResult(false, $"{vehicle.RegNo} not unique!");
                 }
             }
             else
@@ -59,12 +69,12 @@ namespace Exercise5
         /// <returns>Returns a reference to the unparked vehicle, or null if not found</returns>
         public Vehicle UnparkVehicle(string regNo)
         {
-            Vehicle unparkedVehicle = null; // not found yet
+            Vehicle vehicle = null; // not found yet
 
             var matchIndex = IndexOf(regNo.ToUpper());
             if(matchIndex != -1) // if vehicle found
             {
-                unparkedVehicle = vehicles[matchIndex];
+                vehicle = vehicles[matchIndex];
                 count--;
                 for(int i=matchIndex; i<count; i++) // cover the space where the vehicle was
                 {
@@ -72,7 +82,7 @@ namespace Exercise5
                 }
             }
 
-            return unparkedVehicle;
+            return vehicle;
         }
 
         /// <summary>
@@ -94,18 +104,6 @@ namespace Exercise5
             return matchIndex;
         }
 
-
-        /// <summary>
-        /// Gets all vehicles currently parked in the garage
-        /// </summary>
-        /// <returns>Returns an array of vehicles</returns>
-        public Vehicle[] GetVehicles()
-        {
-            var result = new Vehicle[count];
-            Array.Copy(vehicles, result, count);
-            return result;
-        }
-
         /// <summary>
         /// Gets a specific vehicle via registration number
         /// </summary>
@@ -121,15 +119,6 @@ namespace Exercise5
             return (vehicles.Length == count);
         }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="capacity">Number of parking stalls in the garage</param>
-        public Garage(int capacity) // number of parking stalls
-        {
-            vehicles = new Vehicle[capacity];
-            count = 0;
-        }
         public IEnumerator<T> GetEnumerator()
         {
             for (int i = 0; i < count; i++)

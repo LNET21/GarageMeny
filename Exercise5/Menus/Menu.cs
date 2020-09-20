@@ -78,12 +78,11 @@ namespace Exercise5
 
         /// <summary>
         /// Instantiates a new Menu object.
-        /// The static Menu.Init method must 
-        /// be called once, before any Menu 
-        /// objects can be initialized.
+        /// The static Menu.Init method must be called once,
+        /// before any Menu objects can be initialized.
         /// 
-        /// This is to make sure that the Menu 
-        /// class has references to the UI and the Log.
+        /// This is to make sure that the Menu class has 
+        /// references to instantiated UI and Log objects.
         /// </summary>
         /// <param name="name">The menu header text</param>
         /// <returns>A new instance of Menu</returns>
