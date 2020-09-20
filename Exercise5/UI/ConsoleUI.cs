@@ -33,7 +33,7 @@ namespace Exercise5
             Console.Write(text);
         }
 
-        public void WriteLine(string text)
+        public void WriteLine(string text = "")
         {
             Console.WriteLine(text);
         }
@@ -58,7 +58,7 @@ namespace Exercise5
         public void DisplayLog(EventLog log)
         {
             var logs = log.GetLogEntries();
-            if(logs.Length > 0)
+            if (logs.Length > 0)
             {
                 SetColor(Const.logFG, Const.logHeaderBG);
                 WriteLine("Time     Description".PadRight(40));
@@ -74,13 +74,13 @@ namespace Exercise5
         public void DisplayMenu(Menu menu, int cursor)
         {
             SetColor(Const.menuFG, Const.menuBG);
-            Console.SetCursorPosition(0,0);
+            Console.SetCursorPosition(0, 0);
             Console.CursorVisible = false;
             WriteLine(Const.menuDivider);
             WriteLine(GetMenuHeader(menu.MenuName));
             WriteLine(Const.menuDivider);
             WriteLine(Const.menuFeed);
-            for (int i=0; i < menu.Options.Count;i++)
+            for (int i = 0; i < menu.Options.Count; i++)
             {
                 SetColor(Const.menuFG, Const.menuBG);
                 Write("*  ");
@@ -94,7 +94,7 @@ namespace Exercise5
                 WriteLine("  *");
             }
             var feeds = 7 - menu.Options.Count;
-            while(feeds>0)
+            while (feeds > 0)
             {
                 WriteLine(Const.menuFeed);
                 feeds--;
@@ -133,18 +133,30 @@ namespace Exercise5
         {
             bool success = false;
             int result = 0;
-            while(success == false)
+            while (success == false)
             {
                 var input = GetTextFromUser(message, Const.AcceptEmptyString);
-                if(acceptEmpty && input == "")
+                if (acceptEmpty && input == "")
                 {
                     success = true;
                     result = -1;
                 }
                 else
                 {
+
                     success = int.TryParse(input, out result);
-                    WriteWarning(success ? "" : "Skriv ett heltal!\n");
+                    if (success == false)
+                    {
+                        WriteWarning(success ? "" : "Write an integer!\n");
+                    }
+                    else
+                    {
+                        success = (result >= 0);
+                        if (!success)
+                        {
+                            WriteWarning(success ? "" : "Only positive numbers!\n");
+                        }
+                    }
                 }
             }
             return result;
@@ -168,7 +180,6 @@ namespace Exercise5
             Clear();
         }
 
-
         public void DisplayInputHeader(string header)
         {
             SetColor(Const.inputHeaderFG, Const.inputHeaderBG);
@@ -177,64 +188,6 @@ namespace Exercise5
             text = text.PadRight(40, ' ');
             WriteLine(text);
             SetColorNormal();
-        }
-
-        public void DisplayGarage(Garage<Vehicle> garage)
-        {
-            var nr = garage.Count;
-            var free = garage.Capacity - garage.Count;
-            SetColorNormal();
-            Clear();
-            DisplayVehicleList(garage);
-            Write($"\nThere {(nr != 1 ? "are" : "is")} {nr} parked vehicle{(nr != 1 ? "s" : "")} in the garage. ");
-            Write($"{(free==0 ? "No more" : $"Another {free}")} vehicle{(free>1 ? "s" : "")} can be parked.\n");
-            PromptUserForKey();
-            Clear();
-        }
-
-        public void DisplayVehicleList(Garage<Vehicle> vehicleList)
-        {
-            SetColor(Const.listHeaderFG, Const.listHeaderBG);
-            WriteLine(" Regnr       Type        Color       Wheels    Fueltype    Extra info        ");
-            var sb = new StringBuilder();
-            SetColor(Const.listFG, Const.normalBG);
-            foreach (var v in vehicleList)
-            {
-                sb.Append(" ");
-                sb.Append(v.RegNo.PadRight(12, ' '));
-                sb.Append(v.ToString().Split('.').Last().PadRight(12, ' '));
-                sb.Append(v.Color.PadRight(12, ' '));
-                sb.Append(v.NrOfWheels.ToString().PadRight(10, ' '));
-                sb.Append(v.FuelType.PadRight(12, ' '));
-                sb.Append(v.GetDescription().PadRight(12, ' '));
-                WriteLine(sb.ToString());
-                sb.Clear();
-            }
-            SetColorNormal();
-        }
-
-        public void DisplayVehicleList(Garage<Vehicle> vehicleList, string typeName)
-        {
-            var list = new Garage<Vehicle>(vehicleList.Count);
-            foreach (var v in vehicleList)
-            {
-                if (v.GetType().Name == typeName)
-                {
-                    list.ParkVehicle(v);
-                }
-            }
-            Clear();
-            DisplayVehicleList(list);
-            if (list.Count > 0)
-            {
-                Write($"\nA total number of {list.Count} vehicles of the type {typeName}.");
-            }
-            else
-            {
-                WriteWarning($"\nThere are no vehicles of the type {typeName} in the garage.");
-            }
-            PromptUserForKey();
-            Clear();
         }
     }
 }

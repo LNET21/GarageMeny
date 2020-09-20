@@ -8,7 +8,7 @@ namespace Exercise5
 {
     public class Menu
     {
-        private static ConsoleUI UI { get; set; }
+        private static IUI UI { get; set; }
         private static EventLog Log { get; set; }
         private static bool Initialized { get; set; } = false;
         public string MenuName { get; }
@@ -64,7 +64,7 @@ namespace Exercise5
             return option;
         }
 
-        internal static void Init(ConsoleUI ui, EventLog log)
+        internal static void Init(IUI ui, EventLog log)
         {
             UI = ui;
             Log = log;

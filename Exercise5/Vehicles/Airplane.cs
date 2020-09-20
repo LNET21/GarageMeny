@@ -15,7 +15,7 @@ namespace Exercise5
 
         public override string GetDescription()
         {
-            return $"Has {NrOfEngines} engines";
+            return $"Has {NrOfEngines} engine{(NrOfEngines != 1 ? "s" : "")}";
         }
     }
 }

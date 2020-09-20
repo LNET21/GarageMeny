@@ -26,5 +26,6 @@ namespace Exercise5
         public const string newlines = "\n\n";
         public const bool AcceptEmptyString = true;
         public const bool ForbidEmptyString = false;
+        public const bool Verbose = true;
     }
 }

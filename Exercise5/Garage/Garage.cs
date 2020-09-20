@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Exercise5
 {
-    public class Garage<T> : IEnumerable<T> where T : Vehicle
+    public class Garage<T> : IEnumerable<T>, IGarage where T : Vehicle
     {
         private Vehicle[] vehicles;
 
@@ -56,7 +56,7 @@ namespace Exercise5
                 }
             }
             else
-            { 
+            {
                 result = new ParkingResult(false, "Garage is full");
             }
             return result;
@@ -72,11 +72,11 @@ namespace Exercise5
             Vehicle vehicle = null; // not found yet
 
             var matchIndex = IndexOf(regNo.ToUpper());
-            if(matchIndex != -1) // if vehicle found
+            if (matchIndex != -1) // if vehicle found
             {
                 vehicle = vehicles[matchIndex];
                 count--;
-                for(int i=matchIndex; i<count; i++) // cover the space where the vehicle was
+                for (int i = matchIndex; i < count; i++) // cover the space where the vehicle was
                 {
                     vehicles[i] = vehicles[i + 1];
                 }

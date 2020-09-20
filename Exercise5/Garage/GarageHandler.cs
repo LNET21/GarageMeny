@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Text;
 using System.Transactions;
+using System.Linq;
 
 namespace Exercise5
 {
@@ -12,11 +13,11 @@ namespace Exercise5
         private Garage<Vehicle> garage;
         private Stack<Menu> menuStack;
         private EventLog log;
-        private ConsoleUI ui;
+        private IUI ui;
 
         public GarageHandler()
         {
-            garage = new Garage<Vehicle>(8);
+            garage = new Garage<Vehicle>(15);
             log = new EventLog(12);
             menuStack = new Stack<Menu>();
             ui = new ConsoleUI();
@@ -57,9 +58,14 @@ namespace Exercise5
             menuStack.Pop();
         }
 
-
         /// <summary>
-        /// Gets the entire navigation tree
+        /// Gets the entire navigation tree.
+        /// 
+        /// This menu is a brand new idea of mine, made from scratch.
+        /// 
+        /// Seems to work, but it would have been even better
+        /// with the possibility to add parameters (for some of
+        /// the action calls). Probably in a later version.
         /// </summary>
         /// <returns>Returns the tree in the form of a menu object</returns>
         private Menu GetMenuTree()
@@ -77,7 +83,7 @@ namespace Exercise5
 
             var parkingMenu = Menu.Create("Parking new vehicles");
             parkingMenu.Add(new MenuOption("Park single vehicle", parkingSingleMenu));
-            parkingMenu.Add(new MenuOption("Fill garage with 5 vehicles", new Action(ParkSomeVehicles)));
+            parkingMenu.Add(new MenuOption("Fill garage with 10 vehicles", new Action(ParkSomeVehicles)));
             parkingMenu.Add(backOption);
 
             var vehicleSearchMenu = Menu.Create("Search vehicles");
@@ -113,69 +119,6 @@ namespace Exercise5
             return mainMenu;
         }
 
-        private void RepaintVehicle()
-        {
-            ui.Clear();
-            ui.DisplayVehicleList(garage);
-            ui.Write("\n");
-            if (garage.Count > 0)
-            {
-                ui.DisplayInputHeader("Repainting a vehicle");
-                string regNo = ui.GetTextFromUser("Enter registration number: ");
-                if (regNo != "")
-                {
-                    Vehicle vehicle = garage.GetVehicle(regNo);
-                    if (vehicle == null)
-                    {
-                        ui.WriteWarning("That vehicle does not exist!");
-                    }
-                    else
-                    {
-                        string newColor = ui.GetTextFromUser("Enter name of color to use: ");
-                        vehicle.Color = newColor;
-                        var text = $"{vehicle.RegNo} was repainted";
-                        ui.WriteSuccess(text);
-                        log.Add(text);
-                    }
-                }
-            }
-            else
-            {
-                ui.WriteWarning("There are no vehicles to repaint.");
-            }
-            ui.WaitAndClear();
-        }
-
-        private void ListMotorcycles()
-        {
-            ui.DisplayVehicleList(garage, "Motorcycle");
-        }
-
-        private void ListCars()
-        {
-            ui.DisplayVehicleList(garage, "Car");
-        }
-
-        private void ListBusses()
-        {
-            ui.DisplayVehicleList(garage, "Bus");
-        }
-
-        private void ListBoats()
-        {
-            ui.DisplayVehicleList(garage, "Boat");
-        }
-
-        private void ListAirplanes()
-        {
-            ui.DisplayVehicleList(garage, "Airplane");
-        }
-
-        private void ListParkedVehicles()
-        {
-            ui.DisplayGarage(garage);
-        }
-
         private void ParametricSearch()
         {
             ui.Clear();
@@ -202,14 +145,15 @@ namespace Exercise5
                     match = false; // miss
                 if(match)
                 {
-                    matchList.ParkVehicle(v); // not really "parked" but added to the list of matching vehicles
+                    matchList.ParkVehicle(v); // not really "parked" but added
+                                              // to the list of matching vehicles
                 }
             }
             ui.Write("\n");
             if(matchList.Count > 0)
             {
                 ui.Write("Matching vehicles:\n");
-                ui.DisplayVehicleList(matchList);
+                DisplayVehicleList(matchList);
             }
             else
             {
@@ -220,70 +164,84 @@ namespace Exercise5
 
         private void CreateGarage()
         {
-
+            ui.Clear();
+            ui.DisplayInputHeader("Search for vehicles");
+            ui.WriteWarning("\nThis will demolish the existing garage!!\n");
+            ui.WriteLine("(just press ENTER for skipping this)");
+            int size = ui.GetIntegerFromUser("Number of parking stalls in garage: ", Const.AcceptEmptyString);
+            if(size != -1)
+            {
+                garage = new Garage<Vehicle>(size);
+                log.Add("Demolished old garage...");
+                string msg = $"New garage created: {garage.Capacity} stalls";
+                log.Add(msg);
+                ui.WriteSuccess(msg);
+                ui.PromptUserForKey();
+                ui.Clear();
+            }
         }
 
         private void ParkBoat()
         {
-            if(PreparedForParking("Boat"))
+            if(IsPreparedForParking("Boat"))
             {
                 var dto = GetParkingParametersFromUser();
                 int length = ui.GetIntegerFromUser("Length: ".PadLeft(25), Const.ForbidEmptyString);
                 var boat = new Boat(dto.RegNo, dto.Color, dto.NrOfWheels, dto.FuelType, length);
-                ParkVehicle(boat, true);
+                ParkVehicle(boat, Const.Verbose);
             }
             ui.WaitAndClear();
         }
 
         private void ParkMotorcycle()
         {
-            if (PreparedForParking("Motorcycle"))
+            if (IsPreparedForParking("Motorcycle"))
             {
                 var dto = GetParkingParametersFromUser();
                 string make = ui.GetTextFromUser("Brand: ".PadLeft(25), Const.ForbidEmptyString);
                 var motorcycle = new Motorcycle(dto.RegNo, dto.Color, dto.NrOfWheels, dto.FuelType, make);
-                ParkVehicle(motorcycle, true);
+                ParkVehicle(motorcycle, Const.Verbose);
             }
             ui.WaitAndClear();
         }
 
         private void ParkAirplane()
         {
-            if (PreparedForParking("Airplane"))
+            if (IsPreparedForParking("Airplane"))
             {
                 var dto = GetParkingParametersFromUser();
                 int engines = ui.GetIntegerFromUser("Number of engines: ".PadLeft(25), Const.ForbidEmptyString);
                 var airplane = new Airplane(dto.RegNo, dto.Color, dto.NrOfWheels, dto.FuelType, engines);
-                ParkVehicle(airplane, true);
+                ParkVehicle(airplane, Const.Verbose);
             }
             ui.WaitAndClear();
         }
 
         private void ParkBus()
         {
-            if (PreparedForParking("Bus"))
+            if (IsPreparedForParking("Bus"))
             {
                 var dto = GetParkingParametersFromUser();
                 int seats = ui.GetIntegerFromUser("Number of seats: ".PadLeft(25), Const.ForbidEmptyString);
                 var bus = new Bus(dto.RegNo, dto.Color, dto.NrOfWheels, dto.FuelType, seats);
-                ParkVehicle(bus, true);
+                ParkVehicle(bus, Const.Verbose);
             }
             ui.WaitAndClear();
         }
 
         private void ParkCar()
         {
-            if (PreparedForParking("Car"))
+            if (IsPreparedForParking("Car"))
             {
                 var dto = GetParkingParametersFromUser();
                 string make = ui.GetTextFromUser("Car brand: ".PadLeft(25), Const.ForbidEmptyString);
                 var car = new Car(dto.RegNo, dto.Color, dto.NrOfWheels, dto.FuelType, make);
-                ParkVehicle(car, true);
+                ParkVehicle(car, Const.Verbose);
             }
             ui.WaitAndClear();
         }
 
-        private bool PreparedForParking(string type)
+        private bool IsPreparedForParking(string type)
         {
             ui.Clear();
             ui.DisplayInputHeader($"Parking a vehicle - {type}");
@@ -315,16 +273,49 @@ namespace Exercise5
             return dto;
         }
 
+        private ParkingResult ParkVehicle(Vehicle vehicle, bool verbose = false)
+        {
+            var result = garage.ParkVehicle(vehicle);
+            if (result.Success)
+            {
+                var msg = $"{vehicle.RegNo} is now parked";
+                log.Add(msg);
+                ui.WriteSuccess((verbose) ? msg : "");
+            }
+            else
+            {
+                var msg = $"ERROR - {result.Message}";
+                log.Add(msg);
+                ui.WriteWarning((verbose) ? msg : "");
+            }
+            return result;
+        }
+
+        void ParkSomeVehicles()
+        {
+            ParkVehicle(new Car("ABC123", "Red", 4, "Gasoline", "Nissan"));
+            ParkVehicle(new Bus("XYZ456", "Green", 4, "Diesel", 38));
+            ParkVehicle(new Airplane("SE-ABCD", "Blue", 3, "JetA1", 4));
+            ParkVehicle(new Boat("M/S Lagunia", "Yellow", 0, "Diesel", 12));
+            ParkVehicle(new Motorcycle("HOJ345", "Maroon", 2, "Gasoline", "Harley"));
+            ParkVehicle(new Car("HUB981", "Yellow", 4, "Gasoline", "BMW"));
+            ParkVehicle(new Airplane("JA-37", "Green", 3, "JetA1", 1));
+            ParkVehicle(new Bus("BYT256", "White", 4, "Diesel", 28));
+            ParkVehicle(new Airplane("SN8", "Silver", 0, "Methox", 3));
+            ParkVehicle(new Car("Z80CPU", "Black", 0, "Voltage", "Zilog"));
+            ui.Clear();
+        }
+
         private void UnparkVehicle()
         {
             ui.Clear();
-            ui.DisplayVehicleList(garage);
+            DisplayVehicleList(garage);
             ui.Write("\n");
             if (garage.Count > 0)
             {
                 ui.DisplayInputHeader("Unparking a vehicle");
                 string regNo = ui.GetTextFromUser("Enter registration number: ");
-                if(regNo != "")
+                if (regNo != "")
                 {
                     Vehicle vehicle = garage.UnparkVehicle(regNo);
                     if (vehicle == null)
@@ -346,31 +337,125 @@ namespace Exercise5
             ui.WaitAndClear();
         }
 
-        private ParkingResult ParkVehicle(Vehicle vehicle, bool verbose)
+        private void ListParkedVehicles()
         {
-            var result = garage.ParkVehicle(vehicle);
-            if (result.Success)
+            DisplayGarage(garage);
+        }
+
+        private void ListMotorcycles()
+        {
+            DisplayVehicleList(garage, "Motorcycle");
+        }
+
+        private void ListCars()
+        {
+            DisplayVehicleList(garage, "Car");
+        }
+
+        private void ListBusses()
+        {
+            DisplayVehicleList(garage, "Bus");
+        }
+
+        private void ListBoats()
+        {
+            DisplayVehicleList(garage, "Boat");
+        }
+
+        private void ListAirplanes()
+        {
+            DisplayVehicleList(garage, "Airplane");
+        }
+
+        private void RepaintVehicle()
+        {
+            ui.Clear();
+            DisplayVehicleList(garage);
+            ui.Write("\n");
+            if (garage.Count > 0)
             {
-                var msg = $"{vehicle.RegNo} is now parked";
-                log.Add(msg);
-                ui.WriteSuccess((verbose) ? msg : "");
+                ui.DisplayInputHeader("Repainting a vehicle");
+                string regNo = ui.GetTextFromUser("Enter registration number: ");
+                if (regNo != "")
+                {
+                    Vehicle vehicle = garage.GetVehicle(regNo);
+                    if (vehicle == null)
+                    {
+                        ui.WriteWarning("That vehicle does not exist!");
+                    }
+                    else
+                    {
+                        string newColor = ui.GetTextFromUser("Enter name of color to use: ");
+                        vehicle.Color = newColor;
+                        var text = $"{vehicle.RegNo} was repainted";
+                        ui.WriteSuccess(text);
+                        log.Add(text);
+                    }
+                }
             }
             else
             {
-                var msg = $"ERROR - {result.Message}";
-                log.Add(msg);
-                ui.WriteWarning((verbose) ? msg : "");
+                ui.WriteWarning("There are no vehicles to repaint.");
             }
-            return result;
+            ui.WaitAndClear();
         }
 
-        void ParkSomeVehicles()
+        public void DisplayGarage(Garage<Vehicle> garage)
         {
-            ParkVehicle(new Car("ABC123", "Red", 4, "Gasoline", "Nissan"), false);
-            ParkVehicle(new Bus("XYZ456", "Green", 4, "Diesel", 38), false);
-            ParkVehicle(new Airplane("SE-ABCD", "Blue", 3, "JetA1", 4), false);
-            ParkVehicle(new Boat("M/S Lagunia", "Yellow", 0, "Diesel", 12), false);
-            ParkVehicle(new Motorcycle("HOJ345", "Maroon", 2, "Gasoline", "Harley"), false);
+            var nr = garage.Count;
+            var free = garage.Capacity - garage.Count;
+            ui.SetColorNormal();
+            ui.Clear();
+            DisplayVehicleList(garage);
+            ui.Write($"\nThere {(nr != 1 ? "are" : "is")} {nr} parked vehicle{(nr != 1 ? "s" : "")} in the garage. ");
+            ui.Write($"{(free == 0 ? "No more" : $"Another {free}")} vehicle{(free > 1 ? "s" : "")} can be parked.\n");
+            ui.PromptUserForKey();
+            ui.Clear();
+        }
+
+        public void DisplayVehicleList(Garage<Vehicle> vehicleList)
+        {
+            ui.SetColor(Const.listHeaderFG, Const.listHeaderBG);
+            ui.WriteLine(" Regnr       Type        Color       Wheels    Fueltype    Extra info        ");
+            var sb = new StringBuilder();
+            ui.SetColor(Const.listFG, Const.normalBG);
+            foreach (var v in vehicleList)
+            {
+                sb.Append(" ");
+                sb.Append(v.RegNo.PadRight(12, ' '));
+                sb.Append(v.ToString().Split('.').Last().PadRight(12, ' '));
+                sb.Append(v.Color.PadRight(12, ' '));
+                sb.Append(v.NrOfWheels.ToString().PadRight(10, ' '));
+                sb.Append(v.FuelType.PadRight(12, ' '));
+                sb.Append(v.GetDescription().PadRight(12, ' '));
+                ui.WriteLine(sb.ToString());
+                sb.Clear();
+            }
+            ui.SetColorNormal();
+        }
+
+        public void DisplayVehicleList(Garage<Vehicle> vehicleList, string typeName)
+        {
+            var list = new Garage<Vehicle>(vehicleList.Count);
+            foreach (var v in vehicleList)
+            {
+                if (v.GetType().Name == typeName)
+                {
+                    list.ParkVehicle(v);
+                }
+            }
+            ui.Clear();
+            DisplayVehicleList(list);
+            if (list.Count > 0)
+            {
+                ui.Write($"\nA total number of {list.Count} vehicles of the type {typeName}.");
+            }
+            else
+            {
+                ui.WriteWarning($"\nThere are no vehicles of the type {typeName} in the garage.");
+            }
+            ui.PromptUserForKey();
+            ui.Clear();
         }
     }
 }
