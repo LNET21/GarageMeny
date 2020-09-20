@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Exercise5
 {
-    public class GarageHandler
+    public class GarageHandler : IGarageHandler
     {
         private Garage<Vehicle> garage;
         private Stack<Menu> menuStack;
@@ -108,7 +108,7 @@ namespace Exercise5
             listingMenu.Add(backOption);
 
             var mainMenu = Menu.Create("Garage ver 0.1    Main menu");
-            mainMenu.Add(new MenuOption("List parked vehicles", listingMenu));
+            mainMenu.Add(new MenuOption("Show parked vehicles", listingMenu));
             mainMenu.Add(new MenuOption("Park vehicles", parkingMenu));
             mainMenu.Add(new MenuOption("Unpark vehicles", new Action(UnparkVehicle)));
             mainMenu.Add(new MenuOption("Search", vehicleSearchMenu));
@@ -132,7 +132,7 @@ namespace Exercise5
             string fuelType = ui.GetTextFromUser("Fuel type: ".PadLeft(21));
 
             var matchList = new Garage<Vehicle>(garage.Count);
-            foreach(var v in garage)
+            foreach (var v in garage)
             {
                 bool match = true; // positive default
                 if (regNo != "" && v.RegNo != regNo)
@@ -143,14 +143,14 @@ namespace Exercise5
                     match = false; // miss
                 if (fuelType != "" && v.FuelType != fuelType)
                     match = false; // miss
-                if(match)
+                if (match)
                 {
                     matchList.ParkVehicle(v); // not really "parked" but added
                                               // to the list of matching vehicles
                 }
             }
             ui.Write("\n");
-            if(matchList.Count > 0)
+            if (matchList.Count > 0)
             {
                 ui.Write("Matching vehicles:\n");
                 DisplayVehicleList(matchList);
@@ -167,9 +167,9 @@ namespace Exercise5
             ui.Clear();
             ui.DisplayInputHeader("Search for vehicles");
             ui.WriteWarning("\nThis will demolish the existing garage!!\n");
-            ui.WriteLine("(just press ENTER for skipping this)");
+            ui.WriteLine("(just press ENTER to keep the garage)");
             int size = ui.GetIntegerFromUser("Number of parking stalls in garage: ", Const.AcceptEmptyString);
-            if(size != -1)
+            if (size != -1)
             {
                 garage = new Garage<Vehicle>(size);
                 log.Add("Demolished old garage...");
@@ -183,7 +183,7 @@ namespace Exercise5
 
         private void ParkBoat()
         {
-            if(IsPreparedForParking("Boat"))
+            if (IsPreparedForParking("Boat"))
             {
                 var dto = GetParkingParametersFromUser();
                 int length = ui.GetIntegerFromUser("Length: ".PadLeft(25), Const.ForbidEmptyString);
@@ -252,10 +252,10 @@ namespace Exercise5
         private VehicleDto GetParkingParametersFromUser()
         {
             string regNo;
-            while(true)
+            while (true)
             {
                 regNo = ui.GetTextFromUser("New registration number: ", Const.ForbidEmptyString);
-                if(garage.GetVehicle(regNo) != null) // if not already in garage
+                if (garage.GetVehicle(regNo) != null) // if not already in garage
                 {
                     ui.WriteWarning("That registration number is already in use!\n");
                 }
@@ -291,7 +291,7 @@ namespace Exercise5
             return result;
         }
 
-        void ParkSomeVehicles()
+        private void ParkSomeVehicles()
         {
             ParkVehicle(new Car("ABC123", "Red", 4, "Gasoline", "Nissan"));
             ParkVehicle(new Bus("XYZ456", "Green", 4, "Diesel", 38));
@@ -301,7 +301,7 @@ namespace Exercise5
             ParkVehicle(new Car("HUB981", "Yellow", 4, "Gasoline", "BMW"));
             ParkVehicle(new Airplane("JA-37", "Green", 3, "JetA1", 1));
             ParkVehicle(new Bus("BYT256", "White", 4, "Diesel", 28));
-            ParkVehicle(new Airplane("SN8", "Silver", 0, "Methox", 3));
+            ParkVehicle(new Airplane("SN8", "Silver", 0, "Methane", 3));
             ParkVehicle(new Car("Z80CPU", "Black", 0, "Voltage", "Zilog"));
             ui.Clear();
         }
@@ -400,7 +400,7 @@ namespace Exercise5
             ui.WaitAndClear();
         }
 
-        public void DisplayGarage(Garage<Vehicle> garage)
+        private void DisplayGarage(Garage<Vehicle> garage)
         {
             var nr = garage.Count;
             var free = garage.Capacity - garage.Count;
@@ -413,7 +413,7 @@ namespace Exercise5
             ui.Clear();
         }
 
-        public void DisplayVehicleList(Garage<Vehicle> vehicleList)
+        private void DisplayVehicleList(Garage<Vehicle> vehicleList)
         {
             ui.SetColor(Const.listHeaderFG, Const.listHeaderBG);
             ui.WriteLine(" Regnr       Type        Color       Wheels    Fueltype    Extra info        ");
@@ -434,7 +434,7 @@ namespace Exercise5
             ui.SetColorNormal();
         }
 
-        public void DisplayVehicleList(Garage<Vehicle> vehicleList, string typeName)
+        private void DisplayVehicleList(Garage<Vehicle> vehicleList, string typeName)
         {
             var list = new Garage<Vehicle>(vehicleList.Count);
             foreach (var v in vehicleList)
@@ -448,7 +448,7 @@ namespace Exercise5
             DisplayVehicleList(list);
             if (list.Count > 0)
             {
-                ui.Write($"\nA total number of {list.Count} vehicles of the type {typeName}.");
+                ui.Write($"\nA total number of {list.Count} vehicle{(list.Count != 1 ? "s" : "")} of the type {typeName}.");
             }
             else
             {
